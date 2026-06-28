@@ -1,4 +1,3 @@
-Set-Content -Path "README.md" -Encoding UTF8 -Value @'
 # ClamAV Scheduler
 
 > A complete web-based GUI client, persistent scheduling engine, and management layer for the ClamAV Docker ecosystem.
