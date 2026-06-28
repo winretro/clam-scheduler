@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+requests
+croniter
+apscheduler
+pydantic
+clamd
+python-dotenv
+python-multipart
+pyclamd
+dnspython

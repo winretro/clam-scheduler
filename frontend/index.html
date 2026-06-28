@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClamAV Scheduler</title>
+    <script>
+        // Apply theme immediately to prevent flash
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    </script>
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="js/app.js?v=2" defer></script>
+</head>
+
+<body>
+    <div id="login-overlay" class="overlay">
+        <div class="login-card">
+            <h2>Admin Access</h2>
+            <p>Please enter your Admin credentials.</p>
+            <input type="text" id="username" placeholder="Username">
+            <input type="password" id="password" placeholder="Password"
+                onkeyup="if(event.key === 'Enter') app.handleLogin()">
+            <button class="btn btn-blue btn-lg btn-block" onclick="app.handleLogin()">Verify Session</button>
+            <p id="login-error" class="error-msg"></p>
+        </div>
+    </div>
+
+    <main id="main-dashboard" class="hidden">
+        <header>
+            <div class="logo-area">
+                <h1>ClamAV <span>Control Center</span></h1>
+            </div>
+            <div class="user-info header-actions">
+                <span id="sig-info">Signatures: <span id="sig-date">...</span></span>
+                <span style="color: #ccc;">|</span>
+                <span id="display-user"></span>
+                <div class="overflow-menu-container">
+                    <button class="btn-overflow" onclick="
+                        const menu = this.nextElementSibling;
+                        document.querySelectorAll('.overflow-menu-content').forEach(el => {
+                            if (el !== menu) el.classList.add('hidden');
+                        });
+                        menu.classList.toggle('hidden');
+                        event.stopPropagation();
+                    ">&#8942;</button>
+                    <div class="overflow-menu-content hidden">
+                        <button onclick="app.setTheme('light')">Light Theme</button>
+                        <button onclick="app.setTheme('dark')">Dark Theme</button>
+                        <div style="height: 1px; background: var(--border); margin: 4px 0;"></div>
+                        <button onclick="app.logout()">Logout</button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <section class="explorer-section">
+            <h3>Target Selection</h3>
+            <div id="directory-browser" class="browser-box">
+                <ul id="folder-list"></ul>
+            </div>
+            <button id="start-scan-btn" class="btn btn-green btn-lg" disabled onclick="app.initiateScan()">Scan</button>
+        </section>
+
+        <section class="status-section">
+            <h3>Live Progress</h3>
+            <p id="current-target-label" class="status-target-label">Target: Idle</p>
+            <div class="progress-container">
+                <div id="progress-bar"></div>
+            </div>
+            <p id="status-text">Ready to scan...</p>
+        </section>
+
+        <section class="schedule-section">
+            <div class="section-header-flex">
+                <h3>Task Configuration</h3>
+            </div>
+
+            <div class="config-card">
+                <input type="hidden" id="edit-sched-id" value="">
+
+                <div class="input-group">
+                    <label class="input-label">Schedule Name</label>
+                    <input type="text" id="sched-name" class="input-full" placeholder="e.g., Nightly Full Scan">
+                </div>
+
+                <div class="cron-field-row">
+                    <div class="cron-unit">
+                        <label>Hour (0-23)</label>
+                        <input type="text" id="cron-hour" placeholder="HH">
+                    </div>
+                    <div class="cron-unit">
+                        <label>Minute (0-59)</label>
+                        <input type="text" id="cron-min" placeholder="MM">
+                    </div>
+                    <div class="cron-unit">
+                        <label>Day</label>
+                        <input type="text" id="cron-dom" value="*">
+                    </div>
+                    <div class="cron-unit">
+                        <label>Month</label>
+                        <input type="text" id="cron-month" value="*">
+                    </div>
+                    <div class="cron-unit">
+                        <label>Weekday</label>
+                        <input type="text" id="cron-dow" value="*">
+                    </div>
+                </div>
+
+                <div class="task-sequence-area">
+                    <h4 class="task-sequence-title">Execution Sequence</h4>
+                    <table id="task-sequence-table" class="task-table">
+                        <thead>
+                            <tr>
+                                <th class="col-action">Action</th>
+                                <th>Payload (Path/Target)</th>
+                                <th class="col-offset">Offset</th>
+                                <th class="col-remove"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="task-list-body"></tbody>
+                    </table>
+                    <button class="btn btn-outline-blue btn-block" onclick="app.addTaskRow()">+ Add Action to Sequence</button>
+                </div>
+
+                <div class="mt-25 align-right">
+                    <button onclick="app.clearTaskConfig()" class="btn btn-gray btn-lg mr-10">Cancel</button>
+                    <button onclick="app.saveSequencedSchedule()" class="btn btn-blue btn-lg">Save</button>
+                </div>
+            </div>
+
+            <div id="schedule-manager-area" class="mt-30">
+                <h3>Tasks</h3>
+                <div id="schedule-list"></div>
+            </div>
+        </section>
+
+        <section class="history-section">
+            <div class="section-header-flex">
+                <h3>Scan Log</h3>
+                <button class="btn btn-red-dark btn-sm" onclick="app.clearAllHistory()">Clear Logs</button>
+            </div>
+            <div class="history-table-wrapper">
+                <table id="history-table">
+                    <thead>
+                        <tr>
+                            <th class="col-date">Date</th>
+                            <th>Target</th>
+                            <th class="col-files">Files</th>
+                            <th class="col-infected">Infected</th>
+                            <th class="col-actions">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-body"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <div id="detail-modal" class="overlay hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Scan Details</h2>
+                    <button class="btn btn-gray btn-sm close-btn"
+                        onclick="document.getElementById('detail-modal').classList.add('hidden')">X</button>
+                </div>
+                <div id="detail-content">
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-gray btn-sm close-btn"
+                        onclick="document.getElementById('detail-modal').classList.add('hidden')">Close</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- TEMPLATES -->
+    <template id="folder-item-template">
+        <li class="folder-item"></li>
+    </template>
+
+    <template id="file-item-template">
+        <li class="file-item"></li>
+    </template>
+
+    <template id="sched-empty-template">
+        <p class="sched-empty">No active sequences configured.</p>
+    </template>
+
+    <template id="sched-no-tasks-template">
+        <div class="sched-no-tasks">No tasks configured</div>
+    </template>
+    <template id="task-row-template">
+        <tr class="task-row">
+            <td class="task-action-cell">
+                <select class="task-action-select">
+                    <option value="start_scan">Scan Folder</option>
+                    <option value="update_defs">Update Definitions</option>
+                </select>
+            </td>
+            <td class="task-payload-cell">
+                <div class="task-payload-wrapper">
+                    <input type="text" class="task-payload-input" placeholder="/share/...">
+                    <div class="validation-feedback"></div>
+                </div>
+            </td>
+            <td class="task-remove-cell">
+                <button class="btn btn-gray btn-sm btn-remove">Remove</button>
+            </td>
+        </tr>
+    </template>
+
+    <template id="val-valid-template">
+        <span class="val-valid">✅ <span class="val-text"></span></span>
+    </template>
+
+    <template id="val-invalid-template">
+        <span class="val-invalid">❌ <span class="val-text"></span></span>
+    </template>
+
+    <template id="val-unavail-template">
+        <span class="val-unavail">Validation Unavailable</span>
+    </template>
+
+    <template id="history-row-template">
+        <tr>
+            <td class="h-date"></td>
+            <td class="h-path"></td>
+            <td class="h-files"></td>
+            <td class="h-infected"></td>
+            <td><button class="btn btn-blue btn-sm btn-logs">Log</button></td>
+        </tr>
+    </template>
+
+    <template id="schedule-card-template">
+        <div class="schedule-card">
+            <div class="sched-col-1">
+                <div class="sched-title"></div>
+                <div class="sched-time"></div>
+                <div class="sched-cron"></div>
+            </div>
+            <div class="sched-col-2">
+                <div class="sched-tasks-header">Execution Sequence</div>
+                <div class="sched-tasks-container"></div>
+            </div>
+            <div class="sched-col-3 sched-actions">
+                <label class="toggle-switch">
+                    <input type="checkbox" class="sched-toggle">
+                    <span class="slider round"></span>
+                </label>
+                <div class="overflow-menu-container">
+                    <button class="btn-overflow">&#8942;</button>
+                    <div class="overflow-menu-content">
+                        <button class="btn-menu-edit">✎ Edit</button>
+                        <button class="btn-menu-run">▶ Run Task</button>
+                        <button class="btn-menu-del"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 6px;"><path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1H2.5zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5zM8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5zm3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0z"/></svg>Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="schedule-task-row-template">
+        <div class="sched-task-row">
+            <span class="sched-task-bullet">◆</span>
+            <span class="sched-task-action"></span>
+            <span class="sched-task-payload"></span>
+        </div>
+    </template>
+
+    </body>
+
+</html>
