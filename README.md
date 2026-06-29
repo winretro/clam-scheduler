@@ -53,7 +53,7 @@ The containerized environment operates on a strictly decoupled configuration. In
 
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/winretro/clam-scheduler.git
 cd clam-scheduler
 
 # Generate the local configuration file
@@ -68,16 +68,16 @@ nano .env
 ### Step 2: Build and Deploy
 
 ```bash
-# Purge cache and build the OS layer from scratch
-docker compose build --no-cache
+# Build and bring the stack online in a detached state
+docker compose up -d --build
 
-# Bring the stack online in a detached state
-docker compose up -d
+# Note: If the TZ variable is changed post-build, a container re-evaluation is required to update the internal clock
+docker compose up -d --force-recreate
 ```
 
 ### Step 3: Application Initialization
 
-Navigate to `http://localhost:<HOST_UI_PORT>` in your web browser to access the GUI.
+Navigate to `http://localhost:8089` in your web browser to access the GUI. Or the port you set in the .env file (HOST_UI_PORT).
 
 Upon first launch, the system will intercept the connection and trigger the **Auth-Initialization Routine**. Administrator credentials are cryptographically hashed and committed to the persistent database volume on this first boot.
 
@@ -86,7 +86,7 @@ Upon first launch, the system will intercept the connection and trigger the **Au
 The backend utilizes standardized Python logging mapped to standard output. Log verbosity is controlled entirely via the `LOG_LEVEL` environment variable.
 
 * `INFO`: Standard production mode. Outputs job execution states, critical system failures, and `[DIAGNOSIS] !!! INFECTION:` alerts.
-* `DEBUG`: Mechanic's mode. Outputs raw pyclamd payload strings, APScheduler evaluations, and routine HTTP traffic.
+* `DEBUG`: Troubleshooting mode. Outputs raw pyclamd payload strings, APScheduler evaluations, and routine HTTP traffic.
 
 **To trigger a diagnostic trace:**
 
@@ -96,5 +96,4 @@ The backend utilizes standardized Python logging mapped to standard output. Log 
 
 ## 6. License
 
-Distributed under the MIT License. Copyright (c) 2026 Robert Wingrove
-'@
+Distributed under the MIT License. Copyright (C) 2026 Robert Wingrove
