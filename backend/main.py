@@ -195,7 +195,7 @@ async def get_folders(path: Optional[str] = None):
         files.sort(key=str.lower)
 
         # Add ".." at the top if not root
-        if normalized_path != "/share":
+        if normalized_path != scan_root and normalized_path != "/share":
             folders.insert(0, "..")
 
         return {
@@ -205,10 +205,13 @@ async def get_folders(path: Optional[str] = None):
         }
 
     except Exception:
+        err_folders = []
+        if normalized_path != scan_root and normalized_path != "/share":
+            err_folders.append("..")
         return {
-            "folders": [],
+            "folders": err_folders,
             "files": [],
-            "current_path": "/share"
+            "current_path": normalized_path
         }
     
 
