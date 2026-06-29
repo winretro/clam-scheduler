@@ -1,9 +1,6 @@
 FROM python:3.10-slim
 
-RUN apt-get update && apt-get install -y tzdata
-
-# Create a standard, non-root user named 'appuser'
-RUN useradd -m -s /bin/bash appuser
+RUN apt-get update && apt-get install -y tzdata gosu && rm -rf /var/lib/apt/lists/*
 
 # Set up work directory
 WORKDIR /app
@@ -15,15 +12,14 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application files
 COPY backend /app/backend
 COPY frontend /app/frontend
+COPY entrypoint.sh /app/entrypoint.sh
 
-# Hand ownership of the /app directory over to 'appuser'
-RUN chown -R appuser:appuser /app
-
-# SWITCH TO THE NON-ROOT USER
-USER appuser
+RUN chmod +x /app/entrypoint.sh
 
 # Expose the API port
 EXPOSE 8089
+
+ENTRYPOINT ["/app/entrypoint.sh"]
 
 # Start the application
 CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8089"]
