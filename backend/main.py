@@ -31,6 +31,14 @@ from .scheduler import sync_scheduler
 
 from .logger import logger
 
+from fastapi.responses import FileResponse
+
+# This catches the automatic browser request
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    return FileResponse("static/favicon.png")
+
+
 # --- PATHING SETUP (For Frontend/Static Assets) ---
 FRONTEND_DIR = os.path.join(project_root, "frontend")
 SCAN_DIR = os.getenv("SCAN_DIR", "/data")
