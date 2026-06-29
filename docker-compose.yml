@@ -1,17 +1,15 @@
 services:
   antivirus-gui:
-    build: .
+    image: ghcr.io/winretro/clam-scheduler:latest
     container_name: antivirus-gui
     user: "${PUID}:${PGID}"
     ports:
       - "${HOST_UI_PORT:-8089}:8089"
     environment:
-      - GUI_PASSWORD=${GUI_PASSWORD:-secret}
       - SCAN_DIR=/data
       - TZ=${TZ:-UTC}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
     volumes:
-      - .:/app
       - ./data:/app/data
       # This is dynamic. It resolves whatever path is in your .env file
       - ${HOST_SCAN_TARGET}:/data:ro

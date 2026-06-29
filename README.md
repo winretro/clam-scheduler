@@ -47,37 +47,24 @@ The application is strictly governed by the runtime environment. A template is p
 
 ## 4. Deployment Initialization
 
-The containerized environment operates on a strictly decoupled configuration. Initializing the application requires setting the environment before boot.
+The containerized environment operates on a strictly decoupled configuration and utilizes a pre-built image from the GitHub Container Registry. Initializing the application requires setting the environment before boot.
 
-### Step 1: Environment Setup
+### Step 1: Docker Manager Setup (Dockge / Portainer)
 
-```bash
-# Clone the repository
-git clone https://github.com/winretro/clam-scheduler.git
-cd clam-scheduler
-
-# Generate the local configuration file
-cp .env.example .env
-
-# Edit the environment variables to match your host topology
-nano .env 
-```
+1. Create a new stack in your Docker manager (e.g., Dockge or Portainer).
+2. Copy the contents of the `docker-compose.yml` file from this repository and paste it into the stack editor.
+3. Configure your environment variables using the provided GUI or by creating a `.env` file in the stack directory (referencing the template above).
 
 *Note for Windows Hosts: When defining `HOST_SCAN_TARGET`, ensure you use forward slashes (`/`) instead of backslashes.*
 
-### Step 2: Build and Deploy
+### Step 2: Deploy and Update
 
-```bash
-# Build and bring the stack online in a detached state
-docker compose up -d --build
-
-# Note: If the TZ variable is changed post-build, a container re-evaluation is required to update the internal clock
-docker compose up -d --force-recreate
-```
+1. Click **Deploy** in your Docker manager. It will automatically pull the pre-built `ghcr.io/winretro/clam-scheduler:latest` image and start the stack.
+2. To update the application in the future, simply click the **Update** button in your manager to pull the latest image layer and recreate the container.
 
 ### Step 3: Application Initialization
 
-Navigate to `http://localhost:8089` in your web browser to access the GUI. Or the port you set in the .env file (HOST_UI_PORT).
+Navigate to `http://localhost:8089` in your web browser to access the GUI. Or the port you set in the .env file (`HOST_UI_PORT`).
 
 Upon first launch, the system will intercept the connection and trigger the **Auth-Initialization Routine**. Administrator credentials are cryptographically hashed and committed to the persistent database volume on this first boot.
 
