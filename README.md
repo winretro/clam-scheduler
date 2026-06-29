@@ -47,22 +47,44 @@ The application is strictly governed by the runtime environment. A template is p
 
 ## 4. Deployment Initialization
 
-The containerized environment operates on a strictly decoupled configuration and utilizes a pre-built image from the GitHub Container Registry. Initializing the application requires setting the environment before boot.
+The containerized environment operates on a strictly decoupled configuration and utilizes a pre-built image from the GitHub Container Registry. Initializing the application requires setting the environment before boot. Choose the deployment method that fits your environment.
 
-### Step 1: Docker Manager Setup (Dockge / Portainer)
+### Method 1: Docker Managers (Dockge / Portainer)
+
+This method is recommended for users who prefer graphical stack management.
 
 1. Create a new stack in your Docker manager (e.g., Dockge or Portainer).
 2. Copy the contents of the `docker-compose.yml` file from this repository and paste it into the stack editor.
-3. Configure your environment variables using the provided GUI or by creating a `.env` file in the stack directory (referencing the template above).
+3. Configure your environment variables (`PUID`, `PGID`, etc.) using the provided GUI or by creating a `.env` file in the stack directory (referencing the template above).
+   *Note for Windows Hosts: When defining `HOST_SCAN_TARGET`, ensure you use forward slashes (`/`) instead of backslashes.*
+4. Click **Deploy** in your Docker manager. It will automatically pull the pre-built image and start the stack.
+5. **Updates:** To update the application in the future, simply click the **Update** button in your manager to pull the latest image layer from GHCR and recreate the container.
 
-*Note for Windows Hosts: When defining `HOST_SCAN_TARGET`, ensure you use forward slashes (`/`) instead of backslashes.*
+### Method 2: Standard CLI Deployment
 
-### Step 2: Deploy and Update
+This method provides a clean, non-fragile command-line deployment without needing to clone the entire repository.
 
-1. Click **Deploy** in your Docker manager. It will automatically pull the pre-built `ghcr.io/winretro/clam-scheduler:latest` image and start the stack.
-2. To update the application in the future, simply click the **Update** button in your manager to pull the latest image layer and recreate the container.
+1. Create a new directory for your deployment and navigate into it:
+   ```bash
+   mkdir clam-scheduler && cd clam-scheduler
+   ```
+2. Download the required configuration files (replace URL with actual repository URL if different):
+   ```bash
+   curl -O https://raw.githubusercontent.com/winretro/clam-scheduler/main/docker-compose.yml
+   curl -o .env https://raw.githubusercontent.com/winretro/clam-scheduler/main/.env.example
+   ```
+3. Edit the `.env` file to configure your environment variables (referencing the template above).
+   *Note for Windows Hosts: When defining `HOST_SCAN_TARGET`, ensure you use forward slashes (`/`) instead of backslashes.*
+4. Start the stack:
+   ```bash
+   docker compose up -d
+   ```
+5. **Updates:** To update the application, simply pull the latest image and restart:
+   ```bash
+   docker compose pull && docker compose up -d
+   ```
 
-### Step 3: Application Initialization
+### Application Initialization
 
 Navigate to `http://localhost:8089` in your web browser to access the GUI. Or the port you set in the .env file (`HOST_UI_PORT`).
 
