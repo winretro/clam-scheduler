@@ -103,6 +103,20 @@ The backend utilizes standardized Python logging mapped to standard output. Log 
 2. Restart the backend container: `docker compose restart antivirus-gui`
 3. Follow the trace: `docker logs -f antivirus-gui`
 
-## 6. License
+## 6. Developer Update Workflow
+
+Because of the GitHub Actions CI/CD pipeline, deploying a new version of the application is fully automated. As a maintainer, you do not need to manually compile or upload Docker images. 
+
+To release a new version:
+1. Make your code changes locally.
+2. Commit and push your changes to the `main` branch:
+   ```bash
+   git add .
+   git commit -m "Your commit message"
+   git push origin main
+   ```
+3. GitHub's servers will automatically intercept the push, compile the new Docker image, and publish it to the GitHub Container Registry (GHCR) in the background. Users can then pull the update using the methods described in Section 4.
+
+## 7. License
 
 Distributed under the MIT License. Copyright (C) 2026 Robert Wingrove
