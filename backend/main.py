@@ -27,7 +27,7 @@ from .auth import verify_admin, is_setup_complete, save_credentials, verify_toke
 from .scanner import trigger_managed_scan, stop_active_scan
 from .state import is_scan_running, GlobalRegistry
 from .database import DatabaseManager
-from .scheduler import sync_scheduler
+from .scheduler import sync_scheduler, execute_schedule_sequence, scheduler
 
 from .logger import logger
 
@@ -475,21 +475,23 @@ async def toggle_schedule(sched_id: int, req: ToggleRequest):
 async def run_schedule_now(sched_id: int):
     try:
         tasks = db.get_schedule_tasks(sched_id)
-        target_path = None
-        for task in tasks:
-            if task.get('action_type') == 'start_scan':
-                target_path = task.get('payload')
-                break
-        
-        if not target_path:
-            raise HTTPException(status_code=400, detail="Schedule has no scan target.")
+        if not tasks:
+            raise HTTPException(status_code=400, detail="Schedule has no tasks.")
             
-        if is_scan_running():
+        # Prevent running if it contains a scan task but a scan is already active
+        has_scan = any(t.get('action_type') == 'start_scan' for t in tasks)
+        if has_scan and is_scan_running():
             raise HTTPException(status_code=409, detail="A scan is already running.")
             
-        resolved_path = target_path if target_path.startswith('/') else os.path.join(SCAN_DIR, target_path)
-        result = trigger_managed_scan(os.path.realpath(resolved_path), "Manual (from Schedule)")
-        return result
+        # Add a one-off job to execute immediately
+        scheduler.add_job(
+            execute_schedule_sequence,
+            trigger='date',
+            run_date=datetime.now(timezone.utc),
+            args=[sched_id, tasks, "Manual (from Schedule)"],
+            id=f"manual_run_{sched_id}_{int(time.time())}"
+        )
+        return {"status": "success", "message": "Task sequence initiated."}
     except Exception as e:
         logger.error(f"Run schedule failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
