@@ -47,7 +47,8 @@ async def startup_event():
 # This catches the automatic browser request
 @app.get("/favicon.ico", include_in_schema=False)
 async def favicon():
-    return FileResponse("static/favicon.png")
+    favicon_path = os.path.join(project_root, "static", "favicon.png")
+    return FileResponse(favicon_path)
 
 # --- SETUP / MIDDLEWARE ---
 @app.middleware("http")
