@@ -436,14 +436,6 @@ const app = {
             container.innerHTML = '';
 
             schedules.forEach(sched => {
-                const parts = sched.cron_spec.split(' ');
-                let displayTime = "Custom";
-                if (!isNaN(parts[0]) && !isNaN(parts[1])) {
-                    const dummyDate = new Date();
-                    dummyDate.setHours(parseInt(parts[1]), parseInt(parts[0]), 0, 0);
-                    displayTime = dummyDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-                }
-
                 const template = document.getElementById('schedule-card-template');
                 const clone = template.content.cloneNode(true);
 
@@ -451,7 +443,6 @@ const app = {
                 card.id = 'sched-row-' + sched.id;
 
                 clone.querySelector('.sched-title').textContent = sched.name;
-                clone.querySelector('.sched-time').textContent = displayTime;
                 clone.querySelector('.sched-cron').textContent = 'Cron: ' + sched.cron_spec;
 
                 const tasksContainer = clone.querySelector('.sched-tasks-container');
