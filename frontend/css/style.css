@@ -83,7 +83,9 @@ body { font-family: "Segoe UI", Tahoma, sans-serif; background: var(--bg-main); 
 .login-card input { width: 80%; padding: 10px; margin: 10px 0; border: 1px solid var(--border); border-radius: 0; background: var(--bg-input); color: var(--text-main); }
 .login-card button { background: var(--brand-blue); color: var(--text-inverse); border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; }
 header { background: var(--brand-blue); color: var(--text-inverse); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
-header h1 { margin: 0; font-size: 1.5rem; }
+.logo-area { display: flex; align-items: center; gap: 12px; }
+#app-logo { height: 1.5rem; width: auto; object-fit: contain; }
+header h1 { margin: 0; font-size: 1.5rem; line-height: 1.5rem; }
 header h1 span { font-weight: 300; opacity: 0.8; }
 main { padding: 20px; max-width: 1200px; margin: 0 auto; }
 section { background: var(--bg-card); padding: 20px; border-radius: 0; margin-bottom: 20px; border: 1px solid var(--border); }
