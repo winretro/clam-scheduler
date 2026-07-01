@@ -1,19 +1,23 @@
 services:
   antivirus-gui:
     image: ghcr.io/winretro/clam-scheduler:latest
-    container_name: antivirus-gui
+    container_name: clam-scheduler-gui
     ports:
-      - "${HOST_UI_PORT:-8089}:8089"
+      # Expose ClamAV GUI on host's port 8089
+      - 8089:8089
     environment:
       - SCAN_DIR=/data
-      - TZ=${TZ:-UTC}
-      - LOG_LEVEL=${LOG_LEVEL:-INFO}
-      - PUID=${PUID:-1000}
-      - PGID=${PGID:-1000}
+      # Set the timezone to have cron reflect local time
+      - TZ=Etc/UTC
+      # Set the log level to INFO vs DEBUG
+      - LOG_LEVEL=INFO
+      # Set the permissions to give the container ro access to host path
+      - PUID=1000
+      - PGID=1000
     volumes:
       - ./data:/app/data
-      # This is dynamic. It resolves whatever path is in your .env file
-      - ${HOST_SCAN_TARGET}:/data:ro
+      # Replace with the absolute host path to be scanned
+      - /path/to/your/nas/data:/data:ro
     depends_on:
       - clamav
     restart: unless-stopped
@@ -22,10 +26,11 @@ services:
     image: clamav/clamav:latest
     container_name: clamav_engine
     group_add:
-      - "${PGID}"
+      # Must match the PGID above
+      - 1000
     ports:
-      - "3310:3310"
-    # This also uses the exact same dynamic variable
+      - 3310:3310
     volumes:
-      - ${HOST_SCAN_TARGET}:/data:ro
+      # Must match the exact path mapped in clam-scheduler-gui above
+      - /path/to/your/nas/data:/data:ro
     restart: unless-stopped
