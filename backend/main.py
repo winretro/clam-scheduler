@@ -21,6 +21,7 @@ import logging
 from datetime import timezone
 from croniter import croniter
 import time
+import re
 
 # --- INTERNAL MODULE IMPORTS ---
 from .auth import verify_admin, is_setup_complete, save_credentials, verify_token
@@ -559,6 +560,29 @@ async def validate_path_endpoint(path: str):
     except Exception as e:
         logger.error(f"Validation error: {e}")
         return {"valid": False, "reason": "System error during check"}
+
+@app.get("/")
+async def serve_index():
+    if not is_setup_complete():
+        return RedirectResponse("/setup")
+    
+    index_path = os.path.join(FRONTEND_DIR, "index.html")
+    if not os.path.exists(index_path):
+        return HTMLResponse("<h1>404 - Frontend not found</h1>", status_code=404)
+        
+    with open(index_path, "r", encoding="utf-8") as f:
+        content = f.read()
+        
+    version_file = os.path.join(project_root, "VERSION")
+    try:
+        with open(version_file, "r") as f:
+            version = f.read().strip()
+    except Exception:
+        version = "Unknown"
+        
+    # Replace js/app.js?v=... with the current version
+    content = re.sub(r'js/app\.js\?v=[a-zA-Z0-9.-]+', f'js/app.js?v={version}', content)
+    return HTMLResponse(content)
 
 # --- Static File Mounting ---
 if os.path.exists(FRONTEND_DIR):

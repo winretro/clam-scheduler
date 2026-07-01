@@ -150,7 +150,6 @@ const app = {
                 this.setTheme(theme);
                 this.inactivityTimeoutMinutes = parseInt(timeout);
                 this.resetInactivityTimer();
-                document.getElementById('settings-modal').classList.add('hidden');
             } else {
                 alert("Failed to save settings.");
             }
@@ -192,13 +191,13 @@ const app = {
     updateLimitUI() {
         document.querySelectorAll('.limit-link').forEach(link => {
             if (parseInt(link.dataset.limit) === this.historyLimit) {
-                link.style.fontWeight = 'bold';
+                link.style.fontWeight = 'normal';
                 link.style.color = '#3498db'; // Active blue
                 link.style.textDecoration = 'none';
             } else {
                 link.style.fontWeight = 'normal';
-                link.style.color = ''; // Inherit standard link color
-                link.style.textDecoration = 'underline';
+                link.style.color = 'var(--text-main)'; // Standard color
+                link.style.textDecoration = 'none';
             }
         });
     },

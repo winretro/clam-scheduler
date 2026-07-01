@@ -186,7 +186,7 @@
 
         <!-- SETTINGS MODAL -->
         <div id="settings-modal" class="overlay hidden">
-            <div class="modal-content">
+            <div class="modal-content" style="max-width: 450px;">
                 <div class="modal-header">
                     <h2>Settings</h2>
                     <button class="btn btn-gray btn-sm close-btn"
@@ -195,14 +195,14 @@
                 <div id="settings-content" style="padding: 15px;">
                     <div class="input-group">
                         <label class="input-label">Theme</label>
-                        <select id="setting-theme" class="input-full">
+                        <select id="setting-theme" class="input-full" onchange="app.saveSettings()">
                             <option value="light">Light Theme</option>
                             <option value="dark">Dark Theme</option>
                         </select>
                     </div>
                     <div class="input-group">
                         <label class="input-label">Log Retention</label>
-                        <select id="setting-retention" class="input-full">
+                        <select id="setting-retention" class="input-full" onchange="app.saveSettings()">
                             <option value="7">7 Days</option>
                             <option value="14">14 Days</option>
                             <option value="30">30 Days</option>
@@ -213,7 +213,7 @@
                     </div>
                     <div class="input-group">
                         <label class="input-label">Inactivity Timeout (UI Logoff)</label>
-                        <select id="setting-timeout" class="input-full">
+                        <select id="setting-timeout" class="input-full" onchange="app.saveSettings()">
                             <option value="1">1 Minute</option>
                             <option value="5">5 Minutes</option>
                             <option value="10">10 Minutes</option>
@@ -224,16 +224,15 @@
                     </div>
                 </div>
                 <div class="modal-footer mt-20 align-right">
-                    <button class="btn btn-gray btn-sm mr-10"
-                        onclick="document.getElementById('settings-modal').classList.add('hidden')">Cancel</button>
-                    <button class="btn btn-blue btn-sm" onclick="app.saveSettings()">Save</button>
+                    <button class="btn btn-gray btn-sm close-btn"
+                        onclick="document.getElementById('settings-modal').classList.add('hidden')">Close</button>
                 </div>
             </div>
         </div>
 
         <!-- ABOUT MODAL -->
         <div id="about-modal" class="overlay hidden">
-            <div class="modal-content">
+            <div class="modal-content" style="max-width: 400px;">
                 <div class="modal-header">
                     <h2>About</h2>
                     <button class="btn btn-gray btn-sm close-btn"
