@@ -1,5 +1,5 @@
 services:
-  antivirus-gui:
+  clam-scheduler-gui:
     image: ghcr.io/winretro/clam-scheduler:latest
     container_name: clam-scheduler-gui
     ports:

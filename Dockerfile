@@ -14,6 +14,7 @@ COPY backend /app/backend
 COPY frontend /app/frontend
 COPY static /app/static
 COPY entrypoint.sh /app/entrypoint.sh
+COPY VERSION /app/VERSION
 
 RUN chmod +x /app/entrypoint.sh
 

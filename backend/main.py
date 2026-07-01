@@ -38,6 +38,13 @@ from fastapi.responses import FileResponse
 FRONTEND_DIR = os.path.join(project_root, "frontend")
 SCAN_DIR = os.getenv("SCAN_DIR", "/data")
 
+# --- VERSION SETUP ---
+try:
+    with open(os.path.join(project_root, "VERSION"), "r") as f:
+        APP_VERSION = f.read().strip()
+except Exception:
+    APP_VERSION = "Unknown"
+
 app = FastAPI(title="Antivirus GUI API")
 db = DatabaseManager()
 
@@ -149,13 +156,7 @@ async def get_setup_status():
 
 @app.get("/api/version")
 async def get_version():
-    version_file = os.path.join(project_root, "VERSION")
-    try:
-        with open(version_file, "r") as f:
-            version = f.read().strip()
-    except Exception:
-        version = "Unknown"
-    return {"version": version}
+    return {"version": APP_VERSION}
 
 class SettingsUpdate(BaseModel):
     theme: Optional[str] = None
@@ -573,15 +574,8 @@ async def serve_index():
     with open(index_path, "r", encoding="utf-8") as f:
         content = f.read()
         
-    version_file = os.path.join(project_root, "VERSION")
-    try:
-        with open(version_file, "r") as f:
-            version = f.read().strip()
-    except Exception:
-        version = "Unknown"
-        
     # Replace js/app.js?v=... with the current version
-    content = re.sub(r'js/app\.js\?v=[a-zA-Z0-9.-]+', f'js/app.js?v={version}', content)
+    content = re.sub(r'js/app\.js\?v=[a-zA-Z0-9.-]+', f'js/app.js?v={APP_VERSION}', content)
     return HTMLResponse(content)
 
 # --- Static File Mounting ---
