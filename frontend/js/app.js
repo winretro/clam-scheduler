@@ -190,13 +190,15 @@ const app = {
     },
 
     updateLimitUI() {
-        document.querySelectorAll('.limit-btn').forEach(btn => {
-            if (parseInt(btn.dataset.limit) === this.historyLimit) {
-                btn.classList.add('btn-blue');
-                btn.classList.remove('btn-gray');
+        document.querySelectorAll('.limit-link').forEach(link => {
+            if (parseInt(link.dataset.limit) === this.historyLimit) {
+                link.style.fontWeight = 'bold';
+                link.style.color = '#3498db'; // Active blue
+                link.style.textDecoration = 'none';
             } else {
-                btn.classList.add('btn-gray');
-                btn.classList.remove('btn-blue');
+                link.style.fontWeight = 'normal';
+                link.style.color = ''; // Inherit standard link color
+                link.style.textDecoration = 'underline';
             }
         });
     },

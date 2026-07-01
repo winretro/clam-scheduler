@@ -12,7 +12,7 @@
         document.documentElement.setAttribute('data-theme', savedTheme);
     </script>
     <link rel="stylesheet" href="/css/style.css">
-    <script src="js/app.js?v=2" defer></script>
+    <script src="js/app.js?v=3" defer></script>
 </head>
 
 <body>
@@ -143,10 +143,11 @@
             <div class="section-header-flex">
                 <h3>Scan Log</h3>
                 <div class="history-actions" style="display: flex; align-items: center; gap: 15px;">
-                    <div class="limit-presets" style="display: flex; gap: 5px;">
-                        <button class="btn limit-btn" data-limit="20" onclick="app.setHistoryLimit(20)">20</button>
-                        <button class="btn limit-btn" data-limit="50" onclick="app.setHistoryLimit(50)">50</button>
-                        <button class="btn limit-btn" data-limit="100" onclick="app.setHistoryLimit(100)">100</button>
+                    <div class="limit-presets" style="font-size: 0.9em;">
+                        Show: 
+                        <a href="#" class="limit-link" data-limit="20" onclick="app.setHistoryLimit(20); return false;">20</a> | 
+                        <a href="#" class="limit-link" data-limit="50" onclick="app.setHistoryLimit(50); return false;">50</a> | 
+                        <a href="#" class="limit-link" data-limit="100" onclick="app.setHistoryLimit(100); return false;">100</a>
                     </div>
                     <button class="btn btn-red-dark btn-sm" onclick="app.clearAllHistory()">Clear Logs</button>
                 </div>
@@ -240,7 +241,8 @@
                 </div>
                 <div id="about-content" style="padding: 15px; text-align: center;">
                     <h3>ClamAV Control Center</h3>
-                    <p>Version <span id="app-version-display">...</span></p>
+                    <p style="margin-bottom: 10px; color: var(--text-muted);">Version <span id="app-version-display">...</span></p>
+                    <p style="font-size: 0.85em;">Copyright &copy; 2026 Robert Wingrove</p>
                 </div>
                 <div class="modal-footer">
                     <button class="btn btn-gray btn-sm close-btn"
