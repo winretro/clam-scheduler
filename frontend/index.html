@@ -48,10 +48,8 @@
                         event.stopPropagation();
                     ">&#8942;</button>
                     <div class="overflow-menu-content hidden">
-                        <div style="padding: 8px 12px; font-size: 0.8em; color: var(--text-muted); cursor: default; user-select: none;">Version <span id="app-version-display">...</span></div>
-                        <div style="height: 1px; background: var(--border); margin: 4px 0;"></div>
-                        <button onclick="app.setTheme('light')">Light Theme</button>
-                        <button onclick="app.setTheme('dark')">Dark Theme</button>
+                        <button onclick="app.showAbout()">About</button>
+                        <button onclick="app.showSettings()">Settings</button>
                         <div style="height: 1px; background: var(--border); margin: 4px 0;"></div>
                         <button onclick="app.logout()">Logout</button>
                     </div>
@@ -144,7 +142,14 @@
         <section class="history-section">
             <div class="section-header-flex">
                 <h3>Scan Log</h3>
-                <button class="btn btn-red-dark btn-sm" onclick="app.clearAllHistory()">Clear Logs</button>
+                <div class="history-actions" style="display: flex; align-items: center; gap: 15px;">
+                    <div class="limit-presets" style="display: flex; gap: 5px;">
+                        <button class="btn limit-btn" data-limit="20" onclick="app.setHistoryLimit(20)">20</button>
+                        <button class="btn limit-btn" data-limit="50" onclick="app.setHistoryLimit(50)">50</button>
+                        <button class="btn limit-btn" data-limit="100" onclick="app.setHistoryLimit(100)">100</button>
+                    </div>
+                    <button class="btn btn-red-dark btn-sm" onclick="app.clearAllHistory()">Clear Logs</button>
+                </div>
             </div>
             <div class="history-table-wrapper">
                 <table id="history-table">
@@ -174,6 +179,72 @@
                 <div class="modal-footer">
                     <button class="btn btn-gray btn-sm close-btn"
                         onclick="document.getElementById('detail-modal').classList.add('hidden')">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SETTINGS MODAL -->
+        <div id="settings-modal" class="overlay hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Settings</h2>
+                    <button class="btn btn-gray btn-sm close-btn"
+                        onclick="document.getElementById('settings-modal').classList.add('hidden')">X</button>
+                </div>
+                <div id="settings-content" style="padding: 15px;">
+                    <div class="input-group">
+                        <label class="input-label">Theme</label>
+                        <select id="setting-theme" class="input-full">
+                            <option value="light">Light Theme</option>
+                            <option value="dark">Dark Theme</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Log Retention</label>
+                        <select id="setting-retention" class="input-full">
+                            <option value="7">7 Days</option>
+                            <option value="14">14 Days</option>
+                            <option value="30">30 Days</option>
+                            <option value="90">90 Days</option>
+                            <option value="365">365 Days</option>
+                            <option value="0">Keep Forever</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Inactivity Timeout (UI Logoff)</label>
+                        <select id="setting-timeout" class="input-full">
+                            <option value="1">1 Minute</option>
+                            <option value="5">5 Minutes</option>
+                            <option value="10">10 Minutes</option>
+                            <option value="30">30 Minutes</option>
+                            <option value="60">60 Minutes</option>
+                            <option value="0">Never</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer mt-20 align-right">
+                    <button class="btn btn-gray btn-sm mr-10"
+                        onclick="document.getElementById('settings-modal').classList.add('hidden')">Cancel</button>
+                    <button class="btn btn-blue btn-sm" onclick="app.saveSettings()">Save</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABOUT MODAL -->
+        <div id="about-modal" class="overlay hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>About</h2>
+                    <button class="btn btn-gray btn-sm close-btn"
+                        onclick="document.getElementById('about-modal').classList.add('hidden')">X</button>
+                </div>
+                <div id="about-content" style="padding: 15px; text-align: center;">
+                    <h3>ClamAV Control Center</h3>
+                    <p>Version <span id="app-version-display">...</span></p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-gray btn-sm close-btn"
+                        onclick="document.getElementById('about-modal').classList.add('hidden')">Close</button>
                 </div>
             </div>
         </div>

@@ -35,6 +35,17 @@ def execute_schedule_sequence(schedule_id, tasks, trigger_source="Scheduled"):
         except Exception as e:
             logger.error(f"Error in schedule sequence task {action}: {e}")
 
+def retention_cleanup_job():
+    db = DatabaseManager()
+    try:
+        retention_days = int(db.get_setting('log_retention', 30))
+        if retention_days > 0:
+            deleted = db.delete_old_scans(retention_days)
+            if deleted > 0:
+                logger.info(f"Retention Cleanup: Deleted {deleted} old scans.")
+    except Exception as e:
+        logger.error(f"Error in retention cleanup: {e}")
+
 def sync_scheduler():
     logger.info("--- RUNNING sync_scheduler() ON STARTUP ---")
     scheduler.remove_all_jobs()
@@ -64,6 +75,17 @@ def sync_scheduler():
             )
         except Exception as e:
             logger.error(f"Failed to load schedule {sched['id']} (Cron: {sched.get('cron_spec')}): {e}")
+
+    # Add background log cleanup job (every 6 hours)
+    scheduler.add_job(
+        retention_cleanup_job,
+        'interval',
+        hours=6,
+        id='retention_cleanup',
+        replace_existing=True
+    )
+    # Run it once immediately on startup
+    retention_cleanup_job()
 
     logger.debug(f"--- ACTIVE SCHEDULED JOBS: {scheduler.get_jobs()} ---")
 

@@ -90,6 +90,14 @@ class DatabaseManager:
                 )
             ''')
 
+            # 6. App Settings
+            conn.execute('''
+                CREATE TABLE IF NOT EXISTS settings (
+                    key TEXT PRIMARY KEY,
+                    value TEXT
+                )
+            ''')
+
     # --- SCHEDULING METHODS (Sequence-Based) ---
 
     def save_master_schedule(self, name, cron):
@@ -192,6 +200,55 @@ class DatabaseManager:
             cursor = conn.cursor()
             cursor.execute("DELETE FROM scans")
             conn.commit()
+
+    def delete_old_scans(self, days):
+        """Deletes scans older than X days. Also cleans up threats."""
+        if int(days) <= 0:
+            return 0 # Keep forever
+            
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT id FROM scans 
+                WHERE start_time <= datetime('now', '-' || ? || ' days')
+            ''', (str(days),))
+            old_scans = cursor.fetchall()
+            
+            if not old_scans:
+                return 0
+                
+            old_ids = [str(r[0]) for r in old_scans]
+            placeholders = ','.join('?' * len(old_ids))
+            
+            # Delete threats associated with these scans
+            cursor.execute(f"DELETE FROM threats WHERE scan_id IN ({placeholders})", old_ids)
+            # Delete the scans
+            cursor.execute(f"DELETE FROM scans WHERE id IN ({placeholders})", old_ids)
+            
+            conn.commit()
+            return len(old_ids)
+
+    # --- APP SETTINGS ---
+    def get_all_settings(self):
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT key, value FROM settings")
+            rows = cursor.fetchall()
+            return {row['key']: row['value'] for row in rows}
+            
+    def get_setting(self, key, default_value=None):
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT value FROM settings WHERE key = ?", (key,))
+            row = cursor.fetchone()
+            return row['value'] if row else default_value
+
+    def set_setting(self, key, value):
+        with self._get_connection() as conn:
+            conn.execute('''
+                INSERT OR REPLACE INTO settings (key, value)
+                VALUES (?, ?)
+            ''', (key, str(value)))
 
     # --- UI DATA RETRIEVAL ---
 

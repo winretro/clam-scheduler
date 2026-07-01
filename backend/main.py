@@ -156,10 +156,36 @@ async def get_version():
         version = "Unknown"
     return {"version": version}
 
+class SettingsUpdate(BaseModel):
+    theme: Optional[str] = None
+    log_retention: Optional[int] = None
+    inactivity_timeout: Optional[int] = None
+
+@app.get("/api/settings")
+async def get_settings():
+    # Provide defaults if not found
+    settings = db.get_all_settings()
+    return {
+        "theme": settings.get("theme", "light"),
+        "log_retention": int(settings.get("log_retention", 30)),
+        "inactivity_timeout": int(settings.get("inactivity_timeout", 5))
+    }
+
+@app.put("/api/settings")
+async def update_settings(req: SettingsUpdate):
+    if req.theme is not None:
+        db.set_setting("theme", req.theme)
+    if req.log_retention is not None:
+        db.set_setting("log_retention", req.log_retention)
+    if req.inactivity_timeout is not None:
+        db.set_setting("inactivity_timeout", req.inactivity_timeout)
+    return {"status": "success"}
+
 # --- Pydantic Models ---
 class TaskItem(BaseModel):
     action: str
     payload: str
+
 
 class SequencedScheduleRequest(BaseModel):
     id: Optional[int] = None # Added for Edit support

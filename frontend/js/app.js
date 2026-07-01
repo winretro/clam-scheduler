@@ -65,6 +65,9 @@ const app = {
     isScanning: false,
     selectedPath: null,
     eventSource: null,
+    historyLimit: parseInt(localStorage.getItem('historyLimit')) || 20,
+    inactivityTimer: null,
+    inactivityTimeoutMinutes: 5,
 
     // --- INIT & AUTH ---
     init() {
@@ -85,6 +88,10 @@ const app = {
             this.startStatusStream();
             this.refreshSigStatus();
             this.loadVersion();
+            
+            this.fetchSettings();
+            this.setupInactivityListener();
+            this.updateLimitUI();
 
             // Poll signature status every hour
             setInterval(() => this.refreshSigStatus(), 3600000);
@@ -96,6 +103,102 @@ const app = {
                 }
             });
         }
+    },
+
+    async fetchSettings() {
+        try {
+            const res = await apiFetch('/api/settings');
+            const data = await res.json();
+            if (data.theme) {
+                this.setTheme(data.theme);
+                document.getElementById('setting-theme').value = data.theme;
+            }
+            if (data.log_retention !== undefined) {
+                document.getElementById('setting-retention').value = data.log_retention;
+            }
+            if (data.inactivity_timeout !== undefined) {
+                this.inactivityTimeoutMinutes = data.inactivity_timeout;
+                document.getElementById('setting-timeout').value = data.inactivity_timeout;
+                this.resetInactivityTimer();
+            }
+        } catch (e) {
+            console.error("Failed to load settings", e);
+        }
+    },
+
+    showSettings() {
+        document.querySelectorAll('.overflow-menu-content').forEach(el => el.classList.add('hidden'));
+        document.getElementById('settings-modal').classList.remove('hidden');
+    },
+
+    async saveSettings() {
+        const theme = document.getElementById('setting-theme').value;
+        const retention = document.getElementById('setting-retention').value;
+        const timeout = document.getElementById('setting-timeout').value;
+
+        try {
+            const res = await apiFetch('/api/settings', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    theme: theme,
+                    log_retention: parseInt(retention),
+                    inactivity_timeout: parseInt(timeout)
+                })
+            });
+            if (res.ok) {
+                this.setTheme(theme);
+                this.inactivityTimeoutMinutes = parseInt(timeout);
+                this.resetInactivityTimer();
+                document.getElementById('settings-modal').classList.add('hidden');
+            } else {
+                alert("Failed to save settings.");
+            }
+        } catch (e) {
+            alert("Error saving settings.");
+        }
+    },
+
+    showAbout() {
+        document.querySelectorAll('.overflow-menu-content').forEach(el => el.classList.add('hidden'));
+        document.getElementById('about-modal').classList.remove('hidden');
+    },
+
+    setupInactivityListener() {
+        const reset = () => this.resetInactivityTimer();
+        window.addEventListener('mousemove', reset);
+        window.addEventListener('keydown', reset);
+        window.addEventListener('scroll', reset);
+        window.addEventListener('click', reset);
+        this.resetInactivityTimer();
+    },
+
+    resetInactivityTimer() {
+        if (this.inactivityTimer) clearTimeout(this.inactivityTimer);
+        if (this.inactivityTimeoutMinutes > 0) {
+            this.inactivityTimer = setTimeout(() => {
+                this.logout();
+            }, this.inactivityTimeoutMinutes * 60 * 1000);
+        }
+    },
+
+    setHistoryLimit(limit) {
+        this.historyLimit = limit;
+        localStorage.setItem('historyLimit', limit);
+        this.updateLimitUI();
+        this.loadHistory();
+    },
+
+    updateLimitUI() {
+        document.querySelectorAll('.limit-btn').forEach(btn => {
+            if (parseInt(btn.dataset.limit) === this.historyLimit) {
+                btn.classList.add('btn-blue');
+                btn.classList.remove('btn-gray');
+            } else {
+                btn.classList.add('btn-gray');
+                btn.classList.remove('btn-blue');
+            }
+        });
     },
 
     setTheme(theme) {
@@ -276,8 +379,8 @@ const app = {
     clearTaskConfig() {
         document.getElementById('edit-sched-id').value = '';
         document.getElementById('sched-name').value = '';
-        document.getElementById('cron-min').value = '';
-        document.getElementById('cron-hour').value = '';
+        document.getElementById('cron-min').value = '0';
+        document.getElementById('cron-hour').value = '0';
         document.getElementById('cron-dom').value = '*';
         document.getElementById('cron-month').value = '*';
         document.getElementById('cron-dow').value = '*';
@@ -585,8 +688,12 @@ const app = {
     async loadHistory() {
         try {
             const response = await apiFetch('/api/history');
-            const history = await response.json();
+            let history = await response.json();
             const body = document.getElementById('history-body');
+
+            if (this.historyLimit > 0) {
+                history = history.slice(0, this.historyLimit);
+            }
 
             body.innerHTML = '';
             history.forEach(entry => {
